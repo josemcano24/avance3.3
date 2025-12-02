@@ -4,12 +4,11 @@ import collections
 import heapq
 
 # ==========================================
-# 1. CONFIGURACIÓN Y CARGA DEL LABERINTO
+# 1. CONFIGURACIÓN Y CARGA DEL NUEVO LABERINTO
 # ==========================================
-st.set_page_config(page_title="Maze Solver 3.3", layout="wide")
+st.set_page_config(page_title="Maze Solver 3.3 Final", layout="wide")
 
-# DATOS EXACTOS DE TU ARCHIVO laberintofinalok.txt
-# (Copiados tal cual para asegurar que el camino existe)
+# DATOS ACTUALIZADOS (El nuevo TXT que enviaste)
 RAW_MAZE_DATA = """
 [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 [1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1]
@@ -65,9 +64,9 @@ def parse_maze_from_text(raw_data):
 
 MAZE = parse_maze_from_text(RAW_MAZE_DATA)
 
-# Coordenadas automáticas basadas en el archivo
-START = (0, 1)  # Fila 0, Columna 1 (que es un 0)
-END = (len(MAZE)-1, len(MAZE[0])-2) # Última fila, penúltima columna (que es un 0)
+# Coordenadas automáticas (Inicio=0,1 | Fin=ÚltimaFila, PenúltimaColumna)
+START = (0, 1) 
+END = (len(MAZE)-1, len(MAZE[0])-2)
 
 # ==========================================
 # 2. ALGORITMOS DE BÚSQUEDA
@@ -94,7 +93,7 @@ def solve_maze_dfs(maze, start, end):
     while stack:
         (r, c), path = stack.pop()
         if (r, c) == end: return path
-        # Orden mezclado para que el camino de DFS se vea diferente e interesante
+        # Orden mezclado para visualización
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]: 
             nr, nc = r + dr, c + dc
             if 0 <= nr < rows and 0 <= nc < cols and maze[nr][nc] == 0 and (nr, nc) not in visited:
@@ -126,7 +125,7 @@ def solve_maze_astar(maze, start, end):
     return None
 
 # ==========================================
-# 3. INTERFAZ GRÁFICA (Estilo idéntico al profe)
+# 3. INTERFAZ GRÁFICA
 # ==========================================
 
 st.title("Visualizador de Algoritmo de Búsqueda en Laberinto")
@@ -135,27 +134,27 @@ def render_maze_html(maze, path=None):
     if path is None: path = []
     path_set = set(path)
     
-    # HTML para renderizar exactamente como la imagen del profe (cuadros pegados)
+    # HTML para visualización estilo "bloque"
     html = '<div style="font-family: monospace; line-height: 10px; font-size: 14px; white-space: pre; letter-spacing: -1px;">'
     for r in range(len(maze)):
         row_str = ""
         for c in range(len(maze[0])):
             if (r, c) == START: char = "🚀"
-            elif (r, c) == END: char = "🚩"  # Bandera correcta
-            elif (r, c) in path_set: char = "🔹" # Camino
-            elif maze[r][c] == 1: char = "⬛" # Pared
-            else: char = "⬜" # Pasillo vacío
+            elif (r, c) == END: char = "🚩"
+            elif (r, c) in path_set: char = "🔹"
+            elif maze[r][c] == 1: char = "⬛"
+            else: char = "⬜"
             row_str += char
         html += row_str + "<br>"
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
 
-# Controles
+# Sidebar
 st.sidebar.header("Opciones")
 algorithm = st.sidebar.selectbox("Selecciona el algoritmo", ["BFS", "DFS", "A*"])
 solve_button = st.sidebar.button("Resolver Laberinto")
 
-# Layout
+# Columnas
 col1, col2 = st.columns([3, 1])
 
 with col1:
