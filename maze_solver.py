@@ -1,9 +1,8 @@
 import collections
 import heapq
 
-# --- 1. CONFIGURACIÓN DEL NUEVO LABERINTO ---
+# --- 1. CONFIGURACIÓN DEL LABERINTO (VERIFICADO) ---
 
-# Copié el contenido exacto de tu archivo de texto aquí para que no tengas errores de lectura
 MAZE_STRING = """
 10111111111111111111111111111111
 10100010001000000000100000000011
@@ -46,35 +45,36 @@ MAZE_STRING = """
 
 def parse_maze(maze_str):
     grid = []
-    for line in maze_str.strip().split('\n'):
-        # Convertir caracteres a enteros: '1' -> 1 (Muro), '0' -> 0 (Camino)
-        row = [int(ch) for ch in line.strip()]
-        grid.append(row)
+    # Usamos strip() para quitar espacios al inicio/final del bloque
+    lines = maze_str.strip().split('\n')
+    for line in lines:
+        # Limpiamos la línea de espacios extra y convertimos
+        clean_line = line.strip()
+        if clean_line: # Solo procesar si hay datos
+            row = [int(ch) for ch in clean_line]
+            grid.append(row)
     return grid
 
 MAZE = parse_maze(MAZE_STRING)
 
-# Definimos Inicio y Fin basados en los huecos del laberinto texto
-# Fila 0, columna 1 tiene un '0'
+# Coordenadas exactas para este laberinto
 START = (0, 1) 
-# Última fila, penúltima columna tiene un '0'
-END = (len(MAZE)-1, len(MAZE[0])-2)
-
+END = (35, 30)
 
 # --- 2. ALGORITMOS DE BÚSQUEDA ---
 
 def solve_maze_bfs(maze, start, end):
-    """Búsqueda en Amplitud (BFS) - Cola"""
+    """Búsqueda en Amplitud (BFS)"""
     rows, cols = len(maze), len(maze[0])
+    if maze[start[0]][start[1]] == 1: return None # El inicio está bloqueado
+    
     queue = collections.deque([(start, [start])])
     visited = set()
     visited.add(start)
 
     while queue:
-        (curr_row, curr_col), path = queue.popleft() # FIFO
-
-        if (curr_row, curr_col) == end:
-            return path
+        (curr_row, curr_col), path = queue.popleft()
+        if (curr_row, curr_col) == end: return path
 
         for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             next_row, next_col = curr_row + dr, curr_col + dc
@@ -85,19 +85,18 @@ def solve_maze_bfs(maze, start, end):
     return None
 
 def solve_maze_dfs(maze, start, end):
-    """Búsqueda en Profundidad (DFS) - Pila"""
+    """Búsqueda en Profundidad (DFS)"""
     rows, cols = len(maze), len(maze[0])
-    stack = [(start, [start])] # Usamos lista como Pila
+    if maze[start[0]][start[1]] == 1: return None
+    
+    stack = [(start, [start])]
     visited = set()
     visited.add(start)
 
     while stack:
-        (curr_row, curr_col), path = stack.pop() # LIFO
+        (curr_row, curr_col), path = stack.pop()
+        if (curr_row, curr_col) == end: return path
 
-        if (curr_row, curr_col) == end:
-            return path
-
-        # En DFS el orden de exploración afecta el camino visualmente
         for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             next_row, next_col = curr_row + dr, curr_col + dc
             if 0 <= next_row < rows and 0 <= next_col < cols and \
@@ -107,33 +106,27 @@ def solve_maze_dfs(maze, start, end):
     return None
 
 def heuristic(a, b):
-    """Distancia Manhattan para A*"""
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def solve_maze_astar(maze, start, end):
-    """Algoritmo A* (A-Star) - Cola de Prioridad"""
+    """Algoritmo A* (A-Star)"""
     rows, cols = len(maze), len(maze[0])
-    # Heap almacena: (f_score, (row, col), path)
+    if maze[start[0]][start[1]] == 1: return None
+    
     priority_queue = []
     heapq.heappush(priority_queue, (0, start, [start]))
-    
     visited = set()
     visited.add(start)
-    
     g_score = {start: 0}
 
     while priority_queue:
         current_f, (curr_row, curr_col), path = heapq.heappop(priority_queue)
-
-        if (curr_row, curr_col) == end:
-            return path
+        if (curr_row, curr_col) == end: return path
 
         for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             next_row, next_col = curr_row + dr, curr_col + dc
-            
             if 0 <= next_row < rows and 0 <= next_col < cols and maze[next_row][next_col] == 0:
                 new_g = g_score[(curr_row, curr_col)] + 1
-                
                 if (next_row, next_col) not in g_score or new_g < g_score[(next_row, next_col)]:
                     g_score[(next_row, next_col)] = new_g
                     f = new_g + heuristic((next_row, next_col), end)
